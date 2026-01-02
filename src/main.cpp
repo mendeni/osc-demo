@@ -22,6 +22,11 @@ int ping_handler(const char *path, const char *types, lo_arg **argv, int argc,
                  lo_message msg, void *user_data) {
     lo_address sender_addr = lo_message_get_source(msg);
     
+    if (!sender_addr) {
+        std::cerr << "Error: Could not determine message source" << std::endl;
+        return 1;
+    }
+    
     std::cout << "Received ping from " << lo_address_get_hostname(sender_addr) 
               << ":" << lo_address_get_port(sender_addr) << std::endl;
     
@@ -31,7 +36,18 @@ int ping_handler(const char *path, const char *types, lo_arg **argv, int argc,
         lo_address_get_port(sender_addr)
     );
     
-    lo_send(reply_addr, "/pong", "s", "pong");
+    if (!reply_addr) {
+        std::cerr << "Error: Could not create reply address" << std::endl;
+        return 1;
+    }
+    
+    int result = lo_send(reply_addr, "/pong", "s", "pong");
+    
+    if (result == -1) {
+        std::cerr << "Error: Failed to send pong response" << std::endl;
+        lo_address_free(reply_addr);
+        return 1;
+    }
     
     std::cout << "Sent pong response" << std::endl;
     
@@ -47,8 +63,14 @@ int generic_handler(const char *path, const char *types, lo_arg **argv, int argc
     
     std::cout << "Received unhandled message:" << std::endl;
     std::cout << "  Path: " << path << std::endl;
-    std::cout << "  From: " << lo_address_get_hostname(sender_addr) 
-              << ":" << lo_address_get_port(sender_addr) << std::endl;
+    
+    if (sender_addr) {
+        std::cout << "  From: " << lo_address_get_hostname(sender_addr) 
+                  << ":" << lo_address_get_port(sender_addr) << std::endl;
+    } else {
+        std::cout << "  From: unknown" << std::endl;
+    }
+    
     std::cout << "  Types: " << types << std::endl;
     
     return 0;
