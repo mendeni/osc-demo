@@ -1,6 +1,6 @@
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_gui_extra/juce_gui_extra.h>
 #include <lo/lo.h>
 
 class MainComponent : public juce::Component, public juce::Timer
