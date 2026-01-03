@@ -16,18 +16,23 @@ MainComponent::MainComponent()
         lo_server_thread_add_method(oscServer, "/knob", "f", knobHandler, this);
         
         lo_server_thread_start(oscServer);
-        DBG("OSC Server started on port " << OSC_PORT);
+        std::cout << "OSC Server started on port " << OSC_PORT << std::endl;
+        std::cout << "Listening for OSC messages on:" << std::endl;
+        std::cout << "  /toggle  - integer (0=OFF, 1=ON)" << std::endl;
+        std::cout << "  /hslider - float (0.0-1.0)" << std::endl;
+        std::cout << "  /vslider - float (0.0-1.0)" << std::endl;
+        std::cout << "  /knob    - float (0.0-1.0)" << std::endl;
     }
     else
     {
-        DBG("Failed to create OSC server");
+        std::cerr << "ERROR: Failed to create OSC server on port " << OSC_PORT << std::endl;
     }
     
     // Configure toggle button
     addAndMakeVisible(toggleButton);
     toggleButton.setButtonText("Toggle");
     toggleButton.onClick = [this] {
-        DBG("Toggle clicked: " << (toggleButton.getToggleState() ? "ON" : "OFF"));
+        std::cout << "Toggle clicked: " << (toggleButton.getToggleState() ? "ON" : "OFF") << std::endl;
     };
     
     addAndMakeVisible(toggleLabel);
@@ -47,7 +52,7 @@ MainComponent::MainComponent()
     horizontalSlider.onValueChange = [this] {
         hSliderValueLabel.setText(juce::String(horizontalSlider.getValue(), 2), 
                                   juce::dontSendNotification);
-        DBG("HSlider: " << horizontalSlider.getValue());
+        std::cout << "HSlider: " << horizontalSlider.getValue() << std::endl;
     };
     
     addAndMakeVisible(hSliderLabel);
@@ -67,7 +72,7 @@ MainComponent::MainComponent()
     verticalSlider.onValueChange = [this] {
         vSliderValueLabel.setText(juce::String(verticalSlider.getValue(), 2), 
                                   juce::dontSendNotification);
-        DBG("VSlider: " << verticalSlider.getValue());
+        std::cout << "VSlider: " << verticalSlider.getValue() << std::endl;
     };
     
     addAndMakeVisible(vSliderLabel);
@@ -87,7 +92,7 @@ MainComponent::MainComponent()
     knobSlider.onValueChange = [this] {
         knobValueLabel.setText(juce::String(knobSlider.getValue(), 2), 
                               juce::dontSendNotification);
-        DBG("Knob: " << knobSlider.getValue());
+        std::cout << "Knob: " << knobSlider.getValue() << std::endl;
     };
     
     addAndMakeVisible(knobLabel);
@@ -210,7 +215,7 @@ int MainComponent::toggleHandler(const char *path, const char *types, lo_arg **a
         int value = argv[0]->i;
         component->newToggleValue.store(value);
         component->toggleNeedsUpdate.store(true);
-        DBG("OSC /toggle received: " << value);
+        std::cout << "OSC /toggle received: " << value << std::endl;
     }
     return 0;
 }
@@ -225,7 +230,7 @@ int MainComponent::hsliderHandler(const char *path, const char *types, lo_arg **
         value = juce::jlimit(0.0f, 1.0f, value);
         component->newHSliderValue.store(value);
         component->hsliderNeedsUpdate.store(true);
-        DBG("OSC /hslider received: " << value);
+        std::cout << "OSC /hslider received: " << value << std::endl;
     }
     return 0;
 }
@@ -240,7 +245,7 @@ int MainComponent::vsliderHandler(const char *path, const char *types, lo_arg **
         value = juce::jlimit(0.0f, 1.0f, value);
         component->newVSliderValue.store(value);
         component->vsliderNeedsUpdate.store(true);
-        DBG("OSC /vslider received: " << value);
+        std::cout << "OSC /vslider received: " << value << std::endl;
     }
     return 0;
 }
@@ -255,12 +260,12 @@ int MainComponent::knobHandler(const char *path, const char *types, lo_arg **arg
         value = juce::jlimit(0.0f, 1.0f, value);
         component->newKnobValue.store(value);
         component->knobNeedsUpdate.store(true);
-        DBG("OSC /knob received: " << value);
+        std::cout << "OSC /knob received: " << value << std::endl;
     }
     return 0;
 }
 
 void MainComponent::errorHandler(int num, const char *msg, const char *path)
 {
-    DBG("OSC Error " << num << " in path " << (path ? path : "unknown") << ": " << msg);
+    std::cerr << "OSC Error " << num << " in path " << (path ? path : "unknown") << ": " << msg << std::endl;
 }
