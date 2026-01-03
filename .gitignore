@@ -19,6 +19,12 @@ cmake-build-*/
 *.exe
 *.out
 osc_host
+OSCControlApp
+
+# JUCE specific
+juce_osc_app/JuceLibraryCode/
+juce_osc_app/Builds/
+*.jucer
 
 # CMake
 CMakeCache.txt
