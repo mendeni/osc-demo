@@ -4,27 +4,38 @@
 
 name: Setup Build Environment
 
-steps:
-  - name: Update package list
-    run: sudo apt-get update
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
-  - name: Install build tools
-    run: sudo apt-get install -y cmake g++
+jobs:
+  setup-environment:
+    name: Setup Environment
+    runs-on: ubuntu-latest
 
-  - name: Install OSC library
-    run: sudo apt-get install -y liblo-dev liblo-tools
+    steps:
+      - name: Update package list
+        run: sudo apt-get update
 
-  - name: Install X11 libraries
-    run: sudo apt-get install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev
+      - name: Install build tools
+        run: sudo apt-get install -y cmake g++
 
-  - name: Install audio libraries
-    run: sudo apt-get install -y libasound2-dev
+      - name: Install OSC library
+        run: sudo apt-get install -y liblo-dev liblo-tools
 
-  - name: Install font libraries
-    run: sudo apt-get install -y libfreetype-dev libfontconfig1-dev
+      - name: Install X11 libraries
+        run: sudo apt-get install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev
 
-  - name: Install graphics libraries
-    run: sudo apt-get install -y libgl1-mesa-dev
+      - name: Install audio libraries
+        run: sudo apt-get install -y libasound2-dev
+
+      - name: Install font libraries
+        run: sudo apt-get install -y libfreetype-dev libfontconfig1-dev
+
+      - name: Install graphics libraries
+        run: sudo apt-get install -y libgl1-mesa-dev
 
 # Package descriptions:
 # - cmake: Build system generator
