@@ -40,6 +40,12 @@ jobs:
       - name: Install graphics libraries
         run: sudo apt-get install -y libgl1-mesa-dev
 
+      - name: Initialize JUCE submodule
+        run: cd /home/runner/work/osc-demo/osc-demo && git submodule update --init --recursive
+
+      - name: Build the applications
+        run: ./build.sh
+
 # Package descriptions:
 # - cmake: Build system generator
 # - g++: GNU C++ compiler
