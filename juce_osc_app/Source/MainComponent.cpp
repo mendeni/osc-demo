@@ -32,7 +32,9 @@ MainComponent::MainComponent()
     addAndMakeVisible(toggleButton);
     toggleButton.setButtonText("Toggle");
     toggleButton.onClick = [this] {
-        std::cout << "Toggle clicked: " << (toggleButton.getToggleState() ? "ON" : "OFF") << std::endl;
+        bool state = toggleButton.getToggleState();
+        toggleValueLabel.setText(state ? "ON" : "OFF", juce::dontSendNotification);
+        std::cout << "Toggle clicked: " << (state ? "ON" : "OFF") << std::endl;
     };
     
     addAndMakeVisible(toggleLabel);
