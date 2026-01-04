@@ -16,6 +16,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check connectivity
+        run: |
+          ping -c 4 github.com
+          curl -I https://github.com
+
       - name: Update package list
         run: sudo apt-get update
 
