@@ -86,22 +86,31 @@ The application will start a GUI with four controllable elements and listen for 
 
 ## Testing
 
-### OSC Host (port 7770)
-In another terminal, send a ping message using `oscsend`:
+### Testing Bidirectional OSC Communication
+
+The OSCControlApp now supports **bidirectional communication** - it both receives OSC messages on port 7771 AND sends OSC messages to localhost:7770 when UI controls are changed.
+
+#### Test Setup 1: UI Changes Send OSC Messages
+
+1. Start the OSC host server:
 ```bash
-oscsend localhost 7770 /ping
+./build/osc_host
 ```
 
-You should see output in the server terminal indicating:
-- Message received
-- Pong response sent
-
-Send a custom message:
+2. In another terminal, start the JUCE OSC Control App:
 ```bash
-oscsend localhost 7770 /test s "hello"
+./build/juce_osc_app/OSCControlApp_artefacts/OSCControlApp
 ```
 
-### JUCE OSC Control App (port 7771)
+3. Interact with the GUI controls (click toggle, move sliders/knob). You should see OSC messages in the `osc_host` terminal indicating that the GUI app is sending OSC messages:
+   - Toggle button clicks send `/toggle` messages with int values (0 or 1)
+   - Horizontal slider changes send `/hslider` messages with float values (0.0-1.0)
+   - Vertical slider changes send `/vslider` messages with float values (0.0-1.0)
+   - Knob changes send `/knob` messages with float values (0.0-1.0)
+
+#### Test Setup 2: Incoming OSC Controls UI
+
+You can still control the GUI remotely using `oscsend`. With both applications running, use these commands:
 
 Control the toggle button (0 = OFF, 1 = ON):
 ```bash
@@ -127,17 +136,40 @@ oscsend localhost 7771 /knob f 0.5
 oscsend localhost 7771 /knob f 1.0
 ```
 
+### OSC Host (port 7770)
+In another terminal, send a ping message using `oscsend`:
+```bash
+oscsend localhost 7770 /ping
+```
+
+You should see output in the server terminal indicating:
+- Message received
+- Pong response sent
+
+Send a custom message:
+```bash
+oscsend localhost 7770 /test s "hello"
+```
+
 ## Usage Examples
 
 ### OSC Host Server (port 7770)
 - `/ping` - Responds with a `/pong` message back to the sender
 - Any other address - Logged as an unhandled message
+- Receives OSC messages sent by the JUCE app when UI controls change
 
-### JUCE OSC Control App (port 7771)
+### JUCE OSC Control App
+**Receives on port 7771:**
 - `/toggle` (int) - Controls the toggle button (0 = OFF, 1 = ON)
 - `/hslider` (float) - Controls the horizontal slider (0.0 to 1.0)
 - `/vslider` (float) - Controls the vertical slider (0.0 to 1.0)
 - `/knob` (float) - Controls the rotary knob (0.0 to 1.0)
+
+**Sends to localhost:7770:**
+- `/toggle` (int) - Sent when toggle button is clicked
+- `/hslider` (float) - Sent when horizontal slider value changes
+- `/vslider` (float) - Sent when vertical slider value changes
+- `/knob` (float) - Sent when knob value changes
 
 All float values are clamped to the 0.0-1.0 range automatically.
 
@@ -161,9 +193,9 @@ osc-demo/
 ## Future Enhancements
 
 - Add more sophisticated message handling and routing
-- Implement bidirectional OSC communication (UI changes send OSC messages)
 - Add preset save/load functionality
 - Support for additional control types
+- Configurable OSC target host and port
 
 ## License
 
