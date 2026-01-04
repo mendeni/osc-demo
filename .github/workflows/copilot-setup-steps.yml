@@ -18,6 +18,7 @@ jobs:
     steps:
       - name: Check connectivity
         run: |
+          sleep 30
           ping -c 4 4.2.2.2
           curl -I https://github.com
 
