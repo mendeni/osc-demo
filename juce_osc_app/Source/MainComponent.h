@@ -27,7 +27,6 @@ private:
     
     // Configuration persistence
     std::unique_ptr<juce::PropertiesFile> properties;
-    bool useCommandLineConfig;
     void initializePropertiesFile();
     void loadConfiguration();
     void saveConfiguration();

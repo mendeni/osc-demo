@@ -2,7 +2,6 @@
 #include <cstdarg>
 
 MainComponent::MainComponent()
-    : useCommandLineConfig(false)
 {
     initializePropertiesFile();
     loadConfiguration();
@@ -10,11 +9,10 @@ MainComponent::MainComponent()
 }
 
 MainComponent::MainComponent(const juce::String& cmdLineHost, int cmdLinePort)
-    : useCommandLineConfig(true)
 {
     initializePropertiesFile();
     
-    // Use command-line provided configuration
+    // Initialize configuration from command-line arguments; allows subsequent modifications via UI
     oscTargetHost = cmdLineHost;
     oscTargetPort = cmdLinePort;
     
@@ -536,14 +534,6 @@ bool MainComponent::validatePort(const juce::String& portStr)
 
 void MainComponent::onApplyButtonClicked()
 {
-    // Don't allow saving if using command-line config
-    if (useCommandLineConfig)
-    {
-        statusLabel.setText("Cannot save: Using command-line configuration", juce::dontSendNotification);
-        statusLabel.setColour(juce::Label::textColourId, juce::Colours::orange);
-        return;
-    }
-    
     juce::String address = addressEditor.getText();
     juce::String portStr = portEditor.getText();
     
