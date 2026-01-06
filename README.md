@@ -51,7 +51,12 @@ On macOS:
 brew install liblo cmake
 ```
 
-**Note:** On macOS, the project is configured to build universal binaries that support both Intel (x86_64) and Apple Silicon (arm64) architectures. The `liblo` library from Homebrew must be available as a universal binary for this to work. If you encounter linking errors, ensure that `liblo` is installed with universal binary support.
+**Note:** By default, the project builds for the native architecture. To build universal binaries that support both Intel (x86_64) and Apple Silicon (arm64), set the `OSC_DEMO_UNIVERSAL_BINARY` CMake option:
+```bash
+cmake -DOSC_DEMO_UNIVERSAL_BINARY=ON ..
+```
+
+Building universal binaries requires `liblo` and other dependencies to be available as universal binaries. The standard Homebrew installation provides native architecture binaries only.
 
 ## Building
 
