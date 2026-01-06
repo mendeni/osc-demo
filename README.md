@@ -62,16 +62,31 @@ On most systems with `liblo-dev` or `liblo` installed, the static library is ava
 
 **Note on Universal Binaries (macOS only):**
 
-By default on macOS, the project builds universal binaries that support both Intel (x86_64) and Apple Silicon (arm64) architectures. This ensures binaries built on one Mac architecture will run on the other.
+By default, the project builds for the native architecture only. This ensures compatibility with Homebrew-installed dependencies which are typically architecture-specific.
 
-If you want to build for native architecture only (faster build, smaller binary), you can disable universal binary support:
+**To build universal binaries that work on both Intel and Apple Silicon Macs**, you need to:
+
+1. Install universal versions of dependencies (liblo must support both x86_64 and arm64)
+2. Enable universal binary support:
+   ```bash
+   cmake -DOSC_DEMO_UNIVERSAL_BINARY=ON ..
+   ```
+
+**Building universal liblo from source:**
+
+If you need universal binaries and Homebrew's liblo doesn't support it, you can build liblo as a universal binary:
 ```bash
-cmake -DOSC_DEMO_UNIVERSAL_BINARY=OFF ..
+# Download and build liblo with universal binary support
+wget https://github.com/radarsat1/liblo/releases/download/0.32/liblo-0.32.tar.gz
+tar xzf liblo-0.32.tar.gz
+cd liblo-0.32
+CFLAGS="-arch x86_64 -arch arm64" LDFLAGS="-arch x86_64 -arch arm64" \
+  ./configure --prefix=/usr/local
+make
+sudo make install
 ```
 
-Building universal binaries requires `liblo` and other dependencies to be available as universal binaries. If the build fails with architecture-related errors, you may need to:
-- Install universal versions of dependencies, or
-- Disable universal binary support with `-DOSC_DEMO_UNIVERSAL_BINARY=OFF`
+**Note:** Standard Homebrew installations provide native architecture binaries only. Building with `-DOSC_DEMO_UNIVERSAL_BINARY=ON` without universal dependencies will fail with linker errors like "symbol(s) not found for architecture x86_64".
 
 ## Building
 
