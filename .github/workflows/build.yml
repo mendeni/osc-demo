@@ -17,8 +17,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Debug Directory
+        run: |
+          pwd
+          ls -la /home/runner/work/osc-demo/
+
       - name: Initialize JUCE submodule
-        run: cd /home/runner/work/osc-demo && git submodule update --init --recursive
+        run: git submodule update --init --recursive
 
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
