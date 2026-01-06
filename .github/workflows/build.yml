@@ -38,15 +38,15 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           mkdir osc-demo
-          mv  "./build/juce_osc_app/OSCControlApp_artefacts/OSC\ Control\ Demo" osc-demo/osc-juce
-          mv "./build/osc_host" osc-demo/osc-pong
+          mv './build/juce_osc_app/OSCControlApp_artefacts/OSC Control Demo' osc-demo/osc-juce
+          mv './build/osc_host' osc-demo/osc-pong
 
       - name: Stage Binaries (macOS)
         if: runner.os == 'macOS'
         run: |
           mkdir osc-demo
-          mv "./build/juce_osc_app/OSCControlApp_artefacts/OSC\ Control\ Demo.app/Contents/MacOS/OSC\ Control\ Demo" osc-demo/osc-juce
-          mv "./build/osc_host" osc-demo/osc-pong
+          mv './build/juce_osc_app/OSCControlApp_artefacts/OSC Control Demo.app/Contents/MacOS/OSC Control Demo' osc-demo/osc-juce
+          mv './build/osc_host' osc-demo/osc-pong
 
       - name: Upload Sonobus artifacts
         uses: actions/upload-artifact@v4
