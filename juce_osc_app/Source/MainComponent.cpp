@@ -1,4 +1,5 @@
 #include "MainComponent.h"
+#include <cstdarg>
 
 MainComponent::MainComponent()
 {
@@ -28,6 +29,21 @@ MainComponent::MainComponent()
         std::cerr << "ERROR: Failed to create OSC server on port " << OSC_PORT << std::endl;
     }
     
+    // Set up OSC client
+    char target_port_str[16];
+    snprintf(target_port_str, sizeof(target_port_str), "%d", OSC_TARGET_PORT);
+    oscClient = lo_address_new(OSC_TARGET_HOST, target_port_str);
+    
+    if (oscClient)
+    {
+        std::cout << "OSC Client initialized, sending to: " << OSC_TARGET_HOST 
+                  << ":" << OSC_TARGET_PORT << std::endl;
+    }
+    else
+    {
+        std::cerr << "ERROR: Failed to create OSC client" << std::endl;
+    }
+    
     // Configure toggle button
     addAndMakeVisible(toggleButton);
     toggleButton.setButtonText("Toggle");
@@ -35,6 +51,7 @@ MainComponent::MainComponent()
         bool state = toggleButton.getToggleState();
         toggleValueLabel.setText(state ? "ON" : "OFF", juce::dontSendNotification);
         std::cout << "Toggle clicked: " << (state ? "ON" : "OFF") << std::endl;
+        sendOscMessage("/toggle", "i", state ? 1 : 0);
     };
     
     addAndMakeVisible(toggleLabel);
@@ -52,9 +69,11 @@ MainComponent::MainComponent()
     horizontalSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     horizontalSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     horizontalSlider.onValueChange = [this] {
-        hSliderValueLabel.setText(juce::String(horizontalSlider.getValue(), 2), 
+        float value = static_cast<float>(horizontalSlider.getValue());
+        hSliderValueLabel.setText(juce::String(value, 2), 
                                   juce::dontSendNotification);
-        std::cout << "HSlider: " << horizontalSlider.getValue() << std::endl;
+        std::cout << "HSlider: " << value << std::endl;
+        sendOscMessage("/hslider", "f", value);
     };
     
     addAndMakeVisible(hSliderLabel);
@@ -72,9 +91,11 @@ MainComponent::MainComponent()
     verticalSlider.setSliderStyle(juce::Slider::LinearVertical);
     verticalSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     verticalSlider.onValueChange = [this] {
-        vSliderValueLabel.setText(juce::String(verticalSlider.getValue(), 2), 
+        float value = static_cast<float>(verticalSlider.getValue());
+        vSliderValueLabel.setText(juce::String(value, 2), 
                                   juce::dontSendNotification);
-        std::cout << "VSlider: " << verticalSlider.getValue() << std::endl;
+        std::cout << "VSlider: " << value << std::endl;
+        sendOscMessage("/vslider", "f", value);
     };
     
     addAndMakeVisible(vSliderLabel);
@@ -92,9 +113,11 @@ MainComponent::MainComponent()
     knobSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     knobSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     knobSlider.onValueChange = [this] {
-        knobValueLabel.setText(juce::String(knobSlider.getValue(), 2), 
+        float value = static_cast<float>(knobSlider.getValue());
+        knobValueLabel.setText(juce::String(value, 2), 
                               juce::dontSendNotification);
-        std::cout << "Knob: " << knobSlider.getValue() << std::endl;
+        std::cout << "Knob: " << value << std::endl;
+        sendOscMessage("/knob", "f", value);
     };
     
     addAndMakeVisible(knobLabel);
@@ -117,6 +140,11 @@ MainComponent::~MainComponent()
     {
         lo_server_thread_stop(oscServer);
         lo_server_thread_free(oscServer);
+    }
+    
+    if (oscClient)
+    {
+        lo_address_free(oscClient);
     }
 }
 
@@ -270,4 +298,54 @@ int MainComponent::knobHandler(const char *path, const char *types, lo_arg **arg
 void MainComponent::errorHandler(int num, const char *msg, const char *path)
 {
     std::cerr << "OSC Error " << num << " in path " << (path ? path : "unknown") << ": " << msg << std::endl;
+}
+
+void MainComponent::sendOscMessage(const char* address, const char* types, ...)
+{
+    if (!oscClient)
+    {
+        std::cerr << "Error: OSC client not initialized" << std::endl;
+        return;
+    }
+    
+    va_list args;
+    va_start(args, types);
+    
+    lo_message msg = lo_message_new();
+    
+    // Build message based on type string
+    for (const char* t = types; *t != '\0'; ++t)
+    {
+        switch (*t)
+        {
+            case 'i':
+                lo_message_add_int32(msg, va_arg(args, int));
+                break;
+            case 'f':
+                lo_message_add_float(msg, static_cast<float>(va_arg(args, double)));
+                break;
+            case 's':
+                lo_message_add_string(msg, va_arg(args, char*));
+                break;
+            default:
+                std::cerr << "Unsupported OSC type: " << *t << std::endl;
+                break;
+        }
+    }
+    
+    va_end(args);
+    
+    // Send message
+    int result = lo_send_message(oscClient, address, msg);
+    
+    if (result == -1)
+    {
+        std::cerr << "Error sending OSC message to " << address << std::endl;
+    }
+    else
+    {
+        std::cout << "Sent OSC: " << address << " " << types << std::endl;
+    }
+    
+    lo_message_free(msg);
 }

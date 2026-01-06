@@ -19,6 +19,11 @@ private:
     lo_server_thread oscServer;
     static const int OSC_PORT = 7771;
     
+    // OSC Client
+    lo_address oscClient;
+    static constexpr const char* OSC_TARGET_HOST = "localhost";
+    static const int OSC_TARGET_PORT = 7770;
+    
     // Static handlers for OSC messages
     static int toggleHandler(const char *path, const char *types, lo_arg **argv, 
                             int argc, lo_message msg, void *user_data);
@@ -29,6 +34,9 @@ private:
     static int knobHandler(const char *path, const char *types, lo_arg **argv, 
                           int argc, lo_message msg, void *user_data);
     static void errorHandler(int num, const char *msg, const char *path);
+    
+    // Helper method to send OSC messages
+    void sendOscMessage(const char* address, const char* types, ...);
     
     // UI Components
     juce::ToggleButton toggleButton;
