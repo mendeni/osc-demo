@@ -2,6 +2,46 @@
 #include <cstdarg>
 
 MainComponent::MainComponent()
+    : useCommandLineConfig(false)
+{
+    initializePropertiesFile();
+    loadConfiguration();
+    initializeComponent();
+}
+
+MainComponent::MainComponent(const juce::String& cmdLineHost, int cmdLinePort)
+    : useCommandLineConfig(true)
+{
+    initializePropertiesFile();
+    
+    // Use command-line provided configuration
+    oscTargetHost = cmdLineHost;
+    oscTargetPort = cmdLinePort;
+    
+    std::cout << "Using command-line configuration: " << oscTargetHost << ":" << oscTargetPort << std::endl;
+    
+    initializeComponent();
+}
+
+void MainComponent::initializePropertiesFile()
+{
+    // Initialize configuration
+    juce::PropertiesFile::Options options;
+    options.applicationName = "OSCControlApp";
+    options.filenameSuffix = ".settings";
+    options.osxLibrarySubFolder = "Application Support";
+    options.folderName = juce::File::getSpecialLocation(
+        juce::File::userApplicationDataDirectory).getChildFile("OSCControlApp").getFullPathName();
+    
+    // Create folder if it doesn't exist
+    juce::File settingsDir(options.folderName);
+    if (!settingsDir.exists())
+        settingsDir.createDirectory();
+    
+    properties.reset(new juce::PropertiesFile(options));
+}
+
+void MainComponent::initializeComponent()
 {
     // Set up OSC server
     char port_str[16];
@@ -30,19 +70,40 @@ MainComponent::MainComponent()
     }
     
     // Set up OSC client
-    char target_port_str[16];
-    snprintf(target_port_str, sizeof(target_port_str), "%d", OSC_TARGET_PORT);
-    oscClient = lo_address_new(OSC_TARGET_HOST, target_port_str);
+    oscClient = nullptr;
+    applyConfiguration();
     
-    if (oscClient)
-    {
-        std::cout << "OSC Client initialized, sending to: " << OSC_TARGET_HOST 
-                  << ":" << OSC_TARGET_PORT << std::endl;
-    }
-    else
-    {
-        std::cerr << "ERROR: Failed to create OSC client" << std::endl;
-    }
+    // Configure configuration UI
+    addAndMakeVisible(configTitleLabel);
+    configTitleLabel.setText("OSC Target Configuration", juce::dontSendNotification);
+    configTitleLabel.setJustificationType(juce::Justification::centredLeft);
+    configTitleLabel.setFont(juce::Font(16.0f, juce::Font::bold));
+    
+    addAndMakeVisible(addressLabel);
+    addressLabel.setText("Target Address:", juce::dontSendNotification);
+    addressLabel.setJustificationType(juce::Justification::centredLeft);
+    
+    addAndMakeVisible(addressEditor);
+    addressEditor.setText(oscTargetHost);
+    addressEditor.setInputRestrictions(0); // Allow any characters for localhost or IP
+    addressEditor.setTooltip("Enter IP address (e.g., 127.0.0.1) or hostname (e.g., localhost)");
+    
+    addAndMakeVisible(portLabel);
+    portLabel.setText("Target Port:", juce::dontSendNotification);
+    portLabel.setJustificationType(juce::Justification::centredLeft);
+    
+    addAndMakeVisible(portEditor);
+    portEditor.setText(juce::String(oscTargetPort));
+    portEditor.setInputRestrictions(5, "0123456789");
+    portEditor.setTooltip("Enter port number (1-65535)");
+    
+    addAndMakeVisible(applyButton);
+    applyButton.setButtonText("Apply");
+    applyButton.onClick = [this] { onApplyButtonClicked(); };
+    
+    addAndMakeVisible(statusLabel);
+    statusLabel.setText("", juce::dontSendNotification);
+    statusLabel.setJustificationType(juce::Justification::centredLeft);
     
     // Configure toggle button
     addAndMakeVisible(toggleButton);
@@ -131,11 +192,16 @@ MainComponent::MainComponent()
     // Start timer for UI updates
     startTimer(50); // 20 FPS
     
-    setSize(600, 500);
+    setSize(600, 650);
 }
 
 MainComponent::~MainComponent()
 {
+    if (properties)
+    {
+        properties->saveIfNeeded();
+    }
+    
     if (oscServer)
     {
         lo_server_thread_stop(oscServer);
@@ -162,6 +228,30 @@ void MainComponent::resized()
 {
     auto bounds = getLocalBounds();
     bounds.removeFromTop(60); // Space for title
+    
+    // Configuration section at the top
+    auto configBounds = bounds.removeFromTop(120);
+    configBounds = configBounds.reduced(10);
+    
+    configTitleLabel.setBounds(configBounds.removeFromTop(25));
+    configBounds.removeFromTop(5); // spacing
+    
+    auto configRow1 = configBounds.removeFromTop(30);
+    addressLabel.setBounds(configRow1.removeFromLeft(120));
+    configRow1.removeFromLeft(5); // spacing
+    addressEditor.setBounds(configRow1.removeFromLeft(200));
+    configRow1.removeFromLeft(10); // spacing
+    portLabel.setBounds(configRow1.removeFromLeft(80));
+    configRow1.removeFromLeft(5); // spacing
+    portEditor.setBounds(configRow1.removeFromLeft(80));
+    
+    configBounds.removeFromTop(5); // spacing
+    auto configRow2 = configBounds.removeFromTop(30);
+    applyButton.setBounds(configRow2.removeFromLeft(100));
+    configRow2.removeFromLeft(10); // spacing
+    statusLabel.setBounds(configRow2);
+    
+    bounds.removeFromTop(10); // spacing
     
     auto section = bounds.removeFromTop(100);
     
@@ -349,3 +439,146 @@ void MainComponent::sendOscMessage(const char* address, const char* types, ...)
     
     lo_message_free(msg);
 }
+
+void MainComponent::loadConfiguration()
+{
+    // Load saved configuration or use defaults
+    oscTargetHost = properties->getValue("oscTargetHost", "127.0.0.1");
+    oscTargetPort = properties->getIntValue("oscTargetPort", 7770);
+    
+    std::cout << "Loaded configuration: " << oscTargetHost << ":" << oscTargetPort << std::endl;
+}
+
+void MainComponent::saveConfiguration()
+{
+    properties->setValue("oscTargetHost", oscTargetHost);
+    properties->setValue("oscTargetPort", oscTargetPort);
+    properties->saveIfNeeded();
+    
+    std::cout << "Saved configuration: " << oscTargetHost << ":" << oscTargetPort << std::endl;
+}
+
+void MainComponent::applyConfiguration()
+{
+    // Free existing client if any
+    if (oscClient)
+    {
+        lo_address_free(oscClient);
+        oscClient = nullptr;
+    }
+    
+    // Create new OSC client with configured values
+    char target_port_str[16];
+    snprintf(target_port_str, sizeof(target_port_str), "%d", oscTargetPort);
+    oscClient = lo_address_new(oscTargetHost.toRawUTF8(), target_port_str);
+    
+    if (oscClient)
+    {
+        std::cout << "OSC Client initialized, sending to: " << oscTargetHost 
+                  << ":" << oscTargetPort << std::endl;
+    }
+    else
+    {
+        std::cerr << "ERROR: Failed to create OSC client" << std::endl;
+    }
+}
+
+bool MainComponent::validateIPAddress(const juce::String& ip)
+{
+    // Simple IP address validation
+    juce::StringArray parts;
+    parts.addTokens(ip, ".", "");
+    
+    if (parts.size() != 4)
+        return false;
+    
+    for (const auto& part : parts)
+    {
+        if (part.isEmpty())
+            return false;
+        
+        // Check that the string only contains digits
+        for (int i = 0; i < part.length(); ++i)
+        {
+            if (!juce::CharacterFunctions::isDigit(part[i]))
+                return false;
+        }
+        
+        // Now safe to convert to int
+        int num = part.getIntValue();
+        if (num < 0 || num > 255)
+            return false;
+        
+        // Reject leading zeros (except for "0" itself)
+        if (part.length() > 1 && part[0] == '0')
+            return false;
+    }
+    
+    return true;
+}
+
+bool MainComponent::validatePort(const juce::String& portStr)
+{
+    if (portStr.isEmpty())
+        return false;
+    
+    // Check that the string only contains digits
+    for (int i = 0; i < portStr.length(); ++i)
+    {
+        if (!juce::CharacterFunctions::isDigit(portStr[i]))
+            return false;
+    }
+    
+    // Now safe to convert to int
+    int port = portStr.getIntValue();
+    return port >= 1 && port <= 65535;
+}
+
+void MainComponent::onApplyButtonClicked()
+{
+    // Don't allow saving if using command-line config
+    if (useCommandLineConfig)
+    {
+        statusLabel.setText("Cannot save: Using command-line configuration", juce::dontSendNotification);
+        statusLabel.setColour(juce::Label::textColourId, juce::Colours::orange);
+        return;
+    }
+    
+    juce::String address = addressEditor.getText();
+    juce::String portStr = portEditor.getText();
+    
+    // Validate inputs
+    if (address.isEmpty())
+    {
+        statusLabel.setText("Error: Address cannot be empty", juce::dontSendNotification);
+        statusLabel.setColour(juce::Label::textColourId, juce::Colours::red);
+        return;
+    }
+    
+    if (!validatePort(portStr))
+    {
+        statusLabel.setText("Error: Invalid port number (1-65535)", juce::dontSendNotification);
+        statusLabel.setColour(juce::Label::textColourId, juce::Colours::red);
+        return;
+    }
+    
+    // Special case: allow "localhost" as valid address
+    if (address != "localhost" && !validateIPAddress(address))
+    {
+        statusLabel.setText("Error: Invalid IP address format", juce::dontSendNotification);
+        statusLabel.setColour(juce::Label::textColourId, juce::Colours::red);
+        return;
+    }
+    
+    // Update configuration
+    oscTargetHost = address;
+    oscTargetPort = portStr.getIntValue();
+    
+    // Save and apply
+    saveConfiguration();
+    applyConfiguration();
+    
+    statusLabel.setText("Configuration applied successfully!", juce::dontSendNotification);
+    statusLabel.setColour(juce::Label::textColourId, juce::Colours::green);
+}
+
