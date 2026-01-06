@@ -49,6 +49,7 @@ MainComponent::MainComponent()
     toggleButton.setButtonText("Toggle");
     toggleButton.onClick = [this] {
         bool state = toggleButton.getToggleState();
+        toggleValueLabel.setText(state ? "ON" : "OFF", juce::dontSendNotification);
         std::cout << "Toggle clicked: " << (state ? "ON" : "OFF") << std::endl;
         sendOscMessage("/toggle", "i", state ? 1 : 0);
     };
