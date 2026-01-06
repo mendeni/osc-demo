@@ -8,6 +8,7 @@ class MainComponent : public juce::Component, public juce::Timer
 {
 public:
     MainComponent();
+    MainComponent(const juce::String& cmdLineHost, int cmdLinePort);
     ~MainComponent() override;
 
     void paint(juce::Graphics&) override;
@@ -21,8 +22,18 @@ private:
     
     // OSC Client
     lo_address oscClient;
-    static constexpr const char* OSC_TARGET_HOST = "localhost";
-    static const int OSC_TARGET_PORT = 7770;
+    juce::String oscTargetHost;
+    int oscTargetPort;
+    
+    // Configuration persistence
+    std::unique_ptr<juce::PropertiesFile> properties;
+    bool useCommandLineConfig;
+    void loadConfiguration();
+    void saveConfiguration();
+    void applyConfiguration();
+    void initializeComponent();
+    bool validateIPAddress(const juce::String& ip);
+    bool validatePort(const juce::String& portStr);
     
     // Static handlers for OSC messages
     static int toggleHandler(const char *path, const char *types, lo_arg **argv, 
@@ -37,6 +48,15 @@ private:
     
     // Helper method to send OSC messages
     void sendOscMessage(const char* address, const char* types, ...);
+    
+    // Configuration UI Components
+    juce::Label configTitleLabel;
+    juce::Label addressLabel;
+    juce::TextEditor addressEditor;
+    juce::Label portLabel;
+    juce::TextEditor portEditor;
+    juce::TextButton applyButton;
+    juce::Label statusLabel;
     
     // UI Components
     juce::ToggleButton toggleButton;
