@@ -1,4 +1,4 @@
-# Unified build for Linux, macOS, and Windows
+# Unified build for Linux and macOS
 name: OSC Demo — Build (matrix)
 
 on:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - name: Checkout code
@@ -33,10 +33,18 @@ jobs:
         run: |
           find . -name 'OSC\ Control\ Demo' -ls
 
-      - name: Stage Binaries
+      - name: Stage Binaries (Linux)
+        if: runner.os == 'Linux'
         run: |
           mkdir osc-demo
-          # mv "./build/juce_osc_app/OSCControlApp_artefacts/OSC\ Control\ Demo.app/Contents/MacOS/OSC\ Control\ Demo" osc-demo/osc-juce
+          mv  "./build/juce_osc_app/OSCControlApp_artefacts/OSC\ Control\ Demo" osc-demo/osc-juce
+          mv "./build/osc_host" osc-demo/osc-pong
+
+      - name: Stage Binaries (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir osc-demo
+          mv "./build/juce_osc_app/OSCControlApp_artefacts/OSC\ Control\ Demo.app/Contents/MacOS/OSC\ Control\ Demo" osc-demo/osc-juce
           mv "./build/osc_host" osc-demo/osc-pong
 
       - name: Upload Sonobus artifacts
@@ -44,4 +52,5 @@ jobs:
         with:
           name: SonoBusMendeni-${{ matrix.os }}
           path: |
-            osc-demo/
+            osc-demo/osc-juce
+            osc-demo/osc-pong
