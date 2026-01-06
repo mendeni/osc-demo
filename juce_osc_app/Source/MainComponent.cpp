@@ -4,29 +4,26 @@
 MainComponent::MainComponent()
     : useCommandLineConfig(false)
 {
-    // Initialize configuration
-    juce::PropertiesFile::Options options;
-    options.applicationName = "OSCControlApp";
-    options.filenameSuffix = ".settings";
-    options.osxLibrarySubFolder = "Application Support";
-    options.folderName = juce::File::getSpecialLocation(
-        juce::File::userApplicationDataDirectory).getChildFile("OSCControlApp").getFullPathName();
-    
-    // Create folder if it doesn't exist
-    juce::File settingsDir(options.folderName);
-    if (!settingsDir.exists())
-        settingsDir.createDirectory();
-    
-    properties.reset(new juce::PropertiesFile(options));
-    
-    // Load configuration or use defaults
+    initializePropertiesFile();
     loadConfiguration();
-    
     initializeComponent();
 }
 
 MainComponent::MainComponent(const juce::String& cmdLineHost, int cmdLinePort)
     : useCommandLineConfig(true)
+{
+    initializePropertiesFile();
+    
+    // Use command-line provided configuration
+    oscTargetHost = cmdLineHost;
+    oscTargetPort = cmdLinePort;
+    
+    std::cout << "Using command-line configuration: " << oscTargetHost << ":" << oscTargetPort << std::endl;
+    
+    initializeComponent();
+}
+
+void MainComponent::initializePropertiesFile()
 {
     // Initialize configuration
     juce::PropertiesFile::Options options;
@@ -42,14 +39,6 @@ MainComponent::MainComponent(const juce::String& cmdLineHost, int cmdLinePort)
         settingsDir.createDirectory();
     
     properties.reset(new juce::PropertiesFile(options));
-    
-    // Use command-line provided configuration
-    oscTargetHost = cmdLineHost;
-    oscTargetPort = cmdLinePort;
-    
-    std::cout << "Using command-line configuration: " << oscTargetHost << ":" << oscTargetPort << std::endl;
-    
-    initializeComponent();
 }
 
 void MainComponent::initializeComponent()
@@ -96,8 +85,8 @@ void MainComponent::initializeComponent()
     
     addAndMakeVisible(addressEditor);
     addressEditor.setText(oscTargetHost);
-    addressEditor.setInputRestrictions(0, "0123456789.");
-    addressEditor.setTooltip("Enter IP address (e.g., 127.0.0.1 or localhost)");
+    addressEditor.setInputRestrictions(0); // Allow any characters for localhost or IP
+    addressEditor.setTooltip("Enter IP address (e.g., 127.0.0.1) or hostname (e.g., localhost)");
     
     addAndMakeVisible(portLabel);
     portLabel.setText("Target Port:", juce::dontSendNotification);
@@ -553,16 +542,21 @@ bool MainComponent::validateIPAddress(const juce::String& ip)
         if (part.isEmpty())
             return false;
         
-        int num = part.getIntValue();
-        if (num < 0 || num > 255)
-            return false;
-        
         // Check that the string only contains digits
         for (int i = 0; i < part.length(); ++i)
         {
             if (!juce::CharacterFunctions::isDigit(part[i]))
                 return false;
         }
+        
+        // Now safe to convert to int
+        int num = part.getIntValue();
+        if (num < 0 || num > 255)
+            return false;
+        
+        // Reject leading zeros (except for "0" itself)
+        if (part.length() > 1 && part[0] == '0')
+            return false;
     }
     
     return true;
@@ -573,6 +567,14 @@ bool MainComponent::validatePort(const juce::String& portStr)
     if (portStr.isEmpty())
         return false;
     
+    // Check that the string only contains digits
+    for (int i = 0; i < portStr.length(); ++i)
+    {
+        if (!juce::CharacterFunctions::isDigit(portStr[i]))
+            return false;
+    }
+    
+    // Now safe to convert to int
     int port = portStr.getIntValue();
     return port >= 1 && port <= 65535;
 }
