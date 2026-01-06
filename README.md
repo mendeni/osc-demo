@@ -127,7 +127,7 @@ To see all command-line options:
 ./build/juce_osc_app/OSCControlApp_artefacts/OSCControlApp --help
 ```
 
-**Note:** When using command-line configuration, the address and port fields in the UI become read-only to prevent conflicts. The configuration overrides saved settings but does not save them permanently. To make changes, restart the application without command-line arguments and use the UI configuration.
+**Note:** When using command-line configuration, the address and port fields in the UI become read-only to prevent conflicts. This configuration overrides saved settings but does not save them permanently. To make changes, restart the application without command-line arguments and use the UI configuration.
 
 ## Testing
 
