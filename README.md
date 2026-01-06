@@ -17,12 +17,16 @@ This project includes two applications:
 - **Thread-based Server**: Uses liblo's server thread for concurrent message handling
 
 ### JUCE OSC Control App (OSCControlApp)
+- **Configurable OSC Target**: Set destination address and port through UI or command-line
+- **Configuration Persistence**: Settings automatically saved and restored
 - **Toggle Button**: OSC-controllable toggle switch
 - **Horizontal Slider**: Linear slider with 0.0-1.0 range
 - **Vertical Slider**: Linear slider with 0.0-1.0 range
 - **Rotary Knob**: Rotary control with 0.0-1.0 range
 - **Real-time OSC Control**: All UI elements respond to OSC messages
+- **Bidirectional Communication**: UI changes send OSC messages to configured target
 - **Visual Feedback**: Value labels display current control states
+- **Input Validation**: Ensures valid IP addresses and port numbers
 
 ## Requirements
 
@@ -83,6 +87,29 @@ Start the JUCE application:
 ```
 
 The application will start a GUI with four controllable elements and listen for OSC messages on port 7771.
+
+#### Configuring OSC Target
+
+The application sends OSC messages to a configurable target address and port. You can configure this in two ways:
+
+**1. Using the UI:**
+- Launch the application
+- Enter the target IP address (e.g., `192.168.1.100` or `localhost`)
+- Enter the target port number (e.g., `7770`)
+- Click the "Apply" button to save and apply the configuration
+- Configuration is automatically saved and persists between application restarts
+
+**2. Using Command-Line Arguments:**
+```bash
+./build/juce_osc_app/OSCControlApp_artefacts/OSCControlApp --host 192.168.1.100 --port 8000
+```
+
+To see all command-line options:
+```bash
+./build/juce_osc_app/OSCControlApp_artefacts/OSCControlApp --help
+```
+
+**Note:** Command-line configuration overrides saved settings but does not save them permanently.
 
 ## Testing
 
