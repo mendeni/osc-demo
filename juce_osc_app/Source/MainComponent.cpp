@@ -99,52 +99,7 @@ void MainComponent::initializeComponent()
     
     addAndMakeVisible(applyButton);
     applyButton.setButtonText("Apply");
-    applyButton.onClick = [this] {
-        // Don't allow saving if using command-line config
-        if (useCommandLineConfig)
-        {
-            statusLabel.setText("Cannot save: Using command-line configuration", juce::dontSendNotification);
-            statusLabel.setColour(juce::Label::textColourId, juce::Colours::orange);
-            return;
-        }
-        
-        juce::String address = addressEditor.getText();
-        juce::String portStr = portEditor.getText();
-        
-        // Validate inputs
-        if (address.isEmpty())
-        {
-            statusLabel.setText("Error: Address cannot be empty", juce::dontSendNotification);
-            statusLabel.setColour(juce::Label::textColourId, juce::Colours::red);
-            return;
-        }
-        
-        if (!validatePort(portStr))
-        {
-            statusLabel.setText("Error: Invalid port number (1-65535)", juce::dontSendNotification);
-            statusLabel.setColour(juce::Label::textColourId, juce::Colours::red);
-            return;
-        }
-        
-        // Special case: allow "localhost" as valid address
-        if (address != "localhost" && !validateIPAddress(address))
-        {
-            statusLabel.setText("Error: Invalid IP address format", juce::dontSendNotification);
-            statusLabel.setColour(juce::Label::textColourId, juce::Colours::red);
-            return;
-        }
-        
-        // Update configuration
-        oscTargetHost = address;
-        oscTargetPort = portStr.getIntValue();
-        
-        // Save and apply
-        saveConfiguration();
-        applyConfiguration();
-        
-        statusLabel.setText("Configuration applied successfully!", juce::dontSendNotification);
-        statusLabel.setColour(juce::Label::textColourId, juce::Colours::green);
-    };
+    applyButton.onClick = [this] { onApplyButtonClicked(); };
     
     addAndMakeVisible(statusLabel);
     statusLabel.setText("", juce::dontSendNotification);
@@ -577,5 +532,53 @@ bool MainComponent::validatePort(const juce::String& portStr)
     // Now safe to convert to int
     int port = portStr.getIntValue();
     return port >= 1 && port <= 65535;
+}
+
+void MainComponent::onApplyButtonClicked()
+{
+    // Don't allow saving if using command-line config
+    if (useCommandLineConfig)
+    {
+        statusLabel.setText("Cannot save: Using command-line configuration", juce::dontSendNotification);
+        statusLabel.setColour(juce::Label::textColourId, juce::Colours::orange);
+        return;
+    }
+    
+    juce::String address = addressEditor.getText();
+    juce::String portStr = portEditor.getText();
+    
+    // Validate inputs
+    if (address.isEmpty())
+    {
+        statusLabel.setText("Error: Address cannot be empty", juce::dontSendNotification);
+        statusLabel.setColour(juce::Label::textColourId, juce::Colours::red);
+        return;
+    }
+    
+    if (!validatePort(portStr))
+    {
+        statusLabel.setText("Error: Invalid port number (1-65535)", juce::dontSendNotification);
+        statusLabel.setColour(juce::Label::textColourId, juce::Colours::red);
+        return;
+    }
+    
+    // Special case: allow "localhost" as valid address
+    if (address != "localhost" && !validateIPAddress(address))
+    {
+        statusLabel.setText("Error: Invalid IP address format", juce::dontSendNotification);
+        statusLabel.setColour(juce::Label::textColourId, juce::Colours::red);
+        return;
+    }
+    
+    // Update configuration
+    oscTargetHost = address;
+    oscTargetPort = portStr.getIntValue();
+    
+    // Save and apply
+    saveConfiguration();
+    applyConfiguration();
+    
+    statusLabel.setText("Configuration applied successfully!", juce::dontSendNotification);
+    statusLabel.setColour(juce::Label::textColourId, juce::Colours::green);
 }
 

@@ -32,6 +32,7 @@ private:
     void loadConfiguration();
     void saveConfiguration();
     void applyConfiguration();
+    void onApplyButtonClicked();
     void initializeComponent();
     bool validateIPAddress(const juce::String& ip);
     bool validatePort(const juce::String& portStr);

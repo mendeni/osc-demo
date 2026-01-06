@@ -34,7 +34,28 @@ public:
             }
             else if (args[i] == "--port" && i + 1 < args.size())
             {
-                port = args[++i].getIntValue();
+                juce::String portStr = args[++i];
+                // Validate that port string contains only digits
+                bool validDigits = true;
+                for (int j = 0; j < portStr.length(); ++j)
+                {
+                    if (!juce::CharacterFunctions::isDigit(portStr[j]))
+                    {
+                        validDigits = false;
+                        break;
+                    }
+                }
+                
+                if (validDigits && !portStr.isEmpty())
+                {
+                    port = portStr.getIntValue();
+                }
+                else
+                {
+                    std::cerr << "Error: Invalid port format. Port must be a number.\n";
+                    quit();
+                    return;
+                }
             }
         }
         
