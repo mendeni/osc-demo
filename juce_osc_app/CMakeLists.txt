@@ -2,11 +2,6 @@ cmake_minimum_required(VERSION 3.15)
 
 project(OSCControlApp VERSION 1.0.0)
 
-# macOS universal binary support - build for both x86_64 and arm64
-if(APPLE)
-    set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Build architectures for macOS" FORCE)
-endif()
-
 # Add JUCE
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../JUCE ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
 
