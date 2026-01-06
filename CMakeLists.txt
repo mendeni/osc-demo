@@ -7,11 +7,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # macOS universal binary support - build for both x86_64 and arm64
 # Note: Requires liblo and other dependencies to be available as universal binaries
-option(OSC_DEMO_UNIVERSAL_BINARY "Build macOS universal binary for x86_64 and arm64" OFF)
+option(OSC_DEMO_UNIVERSAL_BINARY "Build macOS universal binary for x86_64 and arm64" ON)
 
-if(APPLE AND OSC_DEMO_UNIVERSAL_BINARY)
-    set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Build architectures for macOS" FORCE)
-    message(STATUS "Building macOS universal binary (x86_64 and arm64)")
+if(APPLE)
+    if(OSC_DEMO_UNIVERSAL_BINARY)
+        set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Build architectures for macOS" FORCE)
+        message(STATUS "Building macOS universal binary (x86_64 and arm64)")
+        message(STATUS "To build for native architecture only, set -DOSC_DEMO_UNIVERSAL_BINARY=OFF")
+    else()
+        message(STATUS "Building for native macOS architecture only")
+        message(STATUS "To build universal binary, set -DOSC_DEMO_UNIVERSAL_BINARY=ON")
+    endif()
 endif()
 
 # Find liblo package

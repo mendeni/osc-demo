@@ -62,12 +62,16 @@ On most systems with `liblo-dev` or `liblo` installed, the static library is ava
 
 **Note on Universal Binaries (macOS only):**
 
-By default, the project builds for the native architecture. To build universal binaries that support both Intel (x86_64) and Apple Silicon (arm64), set the `OSC_DEMO_UNIVERSAL_BINARY` CMake option:
+By default on macOS, the project builds universal binaries that support both Intel (x86_64) and Apple Silicon (arm64) architectures. This ensures binaries built on one Mac architecture will run on the other.
+
+If you want to build for native architecture only (faster build, smaller binary), you can disable universal binary support:
 ```bash
-cmake -DOSC_DEMO_UNIVERSAL_BINARY=ON ..
+cmake -DOSC_DEMO_UNIVERSAL_BINARY=OFF ..
 ```
 
-Building universal binaries requires `liblo` and other dependencies to be available as universal binaries. The standard Homebrew installation provides native architecture binaries only.
+Building universal binaries requires `liblo` and other dependencies to be available as universal binaries. If the build fails with architecture-related errors, you may need to:
+- Install universal versions of dependencies, or
+- Disable universal binary support with `-DOSC_DEMO_UNIVERSAL_BINARY=OFF`
 
 ## Building
 
