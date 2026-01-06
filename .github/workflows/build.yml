@@ -1,0 +1,59 @@
+name: "OSC Demo Build for Ubuntus"
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Update package list
+        run: sudo apt-get update
+
+      - name: Install build tools
+        run: sudo apt-get install -y cmake g++
+
+      - name: Install OSC library
+        run: sudo apt-get install -y liblo-dev liblo-tools
+
+      - name: Install X11 libraries
+        run: sudo apt-get install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev
+
+      - name: Install audio libraries
+        run: sudo apt-get install -y libasound2-dev
+
+      - name: Install font libraries
+        run: sudo apt-get install -y libfreetype-dev libfontconfig1-dev
+
+      - name: Install graphics libraries
+        run: sudo apt-get install -y libgl1-mesa-dev
+
+      - name: Initialize JUCE submodule
+        run: cd /home/runner/work/osc-demo/osc-demo && git submodule update --init --recursive
+
+      - name: Build the applications
+        run: ./build.sh
+
+# Package descriptions:
+# - cmake: Build system generator
+# - g++: GNU C++ compiler
+# - liblo-dev: Lightweight OSC (Open Sound Control) library - development files
+# - liblo-tools: OSC command-line tools including oscsend for testing
+# - libx11-dev: X11 client-side library - development files
+# - libxrandr-dev: X11 RandR extension library - development files
+# - libxinerama-dev: X11 Xinerama extension library - development files
+# - libxcursor-dev: X11 cursor management library - development files
+# - libasound2-dev: ALSA (Advanced Linux Sound Architecture) library - development files
+# - libfreetype-dev: FreeType 2 font engine - development files
+# - libfontconfig1-dev: Generic font configuration library - development files
+# - libgl1-mesa-dev: Mesa OpenGL development files
+
+# Notes:
+# - Packages are installed in logical groups to improve reliability
+# - Each step can be retried independently if it fails
+# - This setup is required before building the JUCE application with OSC support
