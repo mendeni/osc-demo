@@ -12,7 +12,7 @@ MainComponent::MainComponent(const juce::String& cmdLineHost, int cmdLinePort)
 {
     initializePropertiesFile();
     
-    // Use command-line provided configuration (but don't prevent later modifications)
+    // Initialize configuration from command-line arguments; allows subsequent modifications via UI
     oscTargetHost = cmdLineHost;
     oscTargetPort = cmdLinePort;
     

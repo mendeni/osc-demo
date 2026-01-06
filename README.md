@@ -109,7 +109,7 @@ To see all command-line options:
 ./build/juce_osc_app/OSCControlApp_artefacts/OSCControlApp --help
 ```
 
-**Note:** Command-line configuration overrides saved settings but does not save them permanently.
+**Note:** Command-line configuration provides initial values when the application starts. You can modify these values through the UI at any time, and the changes will be saved and persist for future application launches.
 
 ## Testing
 
