@@ -20,10 +20,9 @@ jobs:
       - name: Debug Directory
         run: |
           pwd
-          ls -la /home/runner/work/osc-demo/
 
       - name: Initialize JUCE submodule
-        run: cd /home/runner/work/osc-demo/osc-demo && git submodule update --init --recursive
+        run: git submodule update --init --recursive
 
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
