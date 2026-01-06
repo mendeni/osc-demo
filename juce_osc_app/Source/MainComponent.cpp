@@ -87,6 +87,7 @@ void MainComponent::initializeComponent()
     addressEditor.setText(oscTargetHost);
     addressEditor.setInputRestrictions(0); // Allow any characters for localhost or IP
     addressEditor.setTooltip("Enter IP address (e.g., 127.0.0.1) or hostname (e.g., localhost)");
+    addressEditor.setReadOnly(useCommandLineConfig);
     
     addAndMakeVisible(portLabel);
     portLabel.setText("Target Port:", juce::dontSendNotification);
@@ -96,14 +97,23 @@ void MainComponent::initializeComponent()
     portEditor.setText(juce::String(oscTargetPort));
     portEditor.setInputRestrictions(5, "0123456789");
     portEditor.setTooltip("Enter port number (1-65535)");
+    portEditor.setReadOnly(useCommandLineConfig);
     
     addAndMakeVisible(applyButton);
     applyButton.setButtonText("Apply");
+    applyButton.setEnabled(!useCommandLineConfig);
     applyButton.onClick = [this] { onApplyButtonClicked(); };
     
     addAndMakeVisible(statusLabel);
     statusLabel.setText("", juce::dontSendNotification);
     statusLabel.setJustificationType(juce::Justification::centredLeft);
+    
+    // Show status message if using command-line configuration
+    if (useCommandLineConfig)
+    {
+        statusLabel.setText("Using command-line configuration (read-only)", juce::dontSendNotification);
+        statusLabel.setColour(juce::Label::textColourId, juce::Colours::grey);
+    }
     
     // Configure toggle button
     addAndMakeVisible(toggleButton);

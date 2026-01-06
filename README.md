@@ -51,7 +51,18 @@ On macOS:
 brew install liblo cmake
 ```
 
-**Note:** By default, the project builds for the native architecture. To build universal binaries that support both Intel (x86_64) and Apple Silicon (arm64), set the `OSC_DEMO_UNIVERSAL_BINARY` CMake option:
+**Note on Static vs. Dynamic Linking:**
+
+The build system attempts to statically link `liblo` by default to create self-contained binaries that don't require `liblo` to be installed at runtime. This is achieved by preferring `liblo.a` (static library) over the shared library.
+
+- If `liblo.a` is found, binaries will be statically linked (no runtime dependency)
+- If only the shared library is available, binaries will be dynamically linked (requires `liblo` at runtime)
+
+On most systems with `liblo-dev` or `liblo` installed, the static library is available by default.
+
+**Note on Universal Binaries (macOS only):**
+
+By default, the project builds for the native architecture. To build universal binaries that support both Intel (x86_64) and Apple Silicon (arm64), set the `OSC_DEMO_UNIVERSAL_BINARY` CMake option:
 ```bash
 cmake -DOSC_DEMO_UNIVERSAL_BINARY=ON ..
 ```
@@ -116,7 +127,7 @@ To see all command-line options:
 ./build/juce_osc_app/OSCControlApp_artefacts/OSCControlApp --help
 ```
 
-**Note:** Command-line configuration overrides saved settings but does not save them permanently.
+**Note:** When using command-line configuration, the address and port fields in the UI become read-only to prevent conflicts. The configuration overrides saved settings but does not save them permanently. To make changes, restart the application without command-line arguments and use the UI configuration.
 
 ## Testing
 

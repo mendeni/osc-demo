@@ -15,8 +15,20 @@ if(APPLE AND OSC_DEMO_UNIVERSAL_BINARY)
 endif()
 
 # Find liblo package
-find_library(LO_LIBRARY lo REQUIRED)
+# Try to find static library first for better portability
+find_library(LO_LIBRARY 
+    NAMES liblo.a lo
+    REQUIRED)
 find_path(LO_INCLUDE_DIR lo/lo.h REQUIRED)
+
+# Check if we found a static library
+get_filename_component(LO_LIBRARY_EXT ${LO_LIBRARY} EXT)
+if(LO_LIBRARY_EXT STREQUAL ".a")
+    message(STATUS "Found static liblo library: ${LO_LIBRARY}")
+else()
+    message(STATUS "Found dynamic liblo library: ${LO_LIBRARY}")
+    message(WARNING "Static liblo library not found. Binary will require liblo to be installed at runtime.")
+endif()
 
 # Include directories
 include_directories(${LO_INCLUDE_DIR})

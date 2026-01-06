@@ -6,8 +6,20 @@ project(OSCControlApp VERSION 1.0.0)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../JUCE ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
 
 # Find liblo
-find_library(LO_LIBRARY lo REQUIRED)
+# Try to find static library first for better portability
+find_library(LO_LIBRARY 
+    NAMES liblo.a lo
+    REQUIRED)
 find_path(LO_INCLUDE_DIR lo/lo.h REQUIRED)
+
+# Check if we found a static library
+get_filename_component(LO_LIBRARY_EXT ${LO_LIBRARY} EXT)
+if(LO_LIBRARY_EXT STREQUAL ".a")
+    message(STATUS "Found static liblo library for JUCE app: ${LO_LIBRARY}")
+else()
+    message(STATUS "Found dynamic liblo library for JUCE app: ${LO_LIBRARY}")
+    message(WARNING "Static liblo library not found. JUCE app will require liblo to be installed at runtime.")
+endif()
 
 # Define the application
 juce_add_gui_app(OSCControlApp
