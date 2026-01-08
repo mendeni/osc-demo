@@ -1,13 +1,25 @@
 cmake_minimum_required(VERSION 3.15)
 
+# Set macOS architectures before project() to build universal binaries
+if(APPLE AND NOT CMAKE_OSX_ARCHITECTURES)
+    set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Build architectures for macOS" FORCE)
+endif()
+
 project(OSCControlApp VERSION 1.0.0)
 
 # Add JUCE
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../JUCE ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
 
-# Find liblo
-find_library(LO_LIBRARY lo REQUIRED)
-find_path(LO_INCLUDE_DIR lo/lo.h REQUIRED)
+# Platform detection and liblo configuration
+if(APPLE)
+    set(LO_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/deps/mac/include")
+    set(LO_LIBRARY_PATH "${CMAKE_SOURCE_DIR}/deps/mac/lib/liblo.a")
+elseif(UNIX AND NOT APPLE)
+    set(LO_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/deps/linux/include")
+    set(LO_LIBRARY_PATH "${CMAKE_SOURCE_DIR}/deps/linux/lib/liblo.a")
+else()
+    message(FATAL_ERROR "Unsupported platform. Only MacOS and Linux are supported.")
+endif()
 
 # Define the application
 juce_add_gui_app(OSCControlApp
@@ -30,9 +42,9 @@ target_link_libraries(OSCControlApp
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
 
-# Link liblo
+# Link liblo - include directories and link static library directly with absolute path
 target_include_directories(OSCControlApp PRIVATE ${LO_INCLUDE_DIR})
-target_link_libraries(OSCControlApp PRIVATE ${LO_LIBRARY})
+target_link_libraries(OSCControlApp PRIVATE "${LO_LIBRARY_PATH}")
 
 # Compile definitions
 target_compile_definitions(OSCControlApp
