@@ -16,13 +16,6 @@ else()
     message(FATAL_ERROR "Unsupported platform. Only MacOS and Linux are supported.")
 endif()
 
-# Create imported static library target for liblo
-add_library(liblo_juce STATIC IMPORTED)
-set_target_properties(liblo_juce PROPERTIES
-    IMPORTED_LOCATION "${LO_LIBRARY_PATH}"
-    INTERFACE_INCLUDE_DIRECTORIES "${LO_INCLUDE_DIR}"
-)
-
 # Define the application
 juce_add_gui_app(OSCControlApp
     PRODUCT_NAME "OSC Control Demo")
@@ -44,8 +37,9 @@ target_link_libraries(OSCControlApp
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
 
-# Link liblo
-target_link_libraries(OSCControlApp PRIVATE liblo_juce)
+# Link liblo - include directories and link static library directly with absolute path
+target_include_directories(OSCControlApp PRIVATE ${LO_INCLUDE_DIR})
+target_link_libraries(OSCControlApp PRIVATE "${LO_LIBRARY_PATH}")
 
 # Compile definitions
 target_compile_definitions(OSCControlApp

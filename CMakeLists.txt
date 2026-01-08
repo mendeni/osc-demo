@@ -16,18 +16,14 @@ else()
     message(FATAL_ERROR "Unsupported platform. Only MacOS and Linux are supported.")
 endif()
 
-# Create imported static library target for liblo
-add_library(liblo STATIC IMPORTED)
-set_target_properties(liblo PROPERTIES
-    IMPORTED_LOCATION "${LO_LIBRARY_PATH}"
-    INTERFACE_INCLUDE_DIRECTORIES "${LO_INCLUDE_DIR}"
-)
-
 # Add executable
 add_executable(osc_host src/main.cpp)
 
-# Link libraries
-target_link_libraries(osc_host PRIVATE liblo)
+# Include directories
+target_include_directories(osc_host PRIVATE ${LO_INCLUDE_DIR})
+
+# Link static library directly with absolute path to avoid dynamic library search
+target_link_libraries(osc_host PRIVATE "${LO_LIBRARY_PATH}")
 
 # Add JUCE application subdirectory
 add_subdirectory(juce_osc_app)
