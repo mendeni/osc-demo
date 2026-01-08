@@ -5,9 +5,16 @@ project(OSCControlApp VERSION 1.0.0)
 # Add JUCE
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../JUCE ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
 
-# Find liblo
-find_library(LO_LIBRARY lo REQUIRED)
-find_path(LO_INCLUDE_DIR lo/lo.h REQUIRED)
+# Platform detection and liblo configuration
+if(APPLE)
+    set(LO_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/deps/mac/include")
+    set(LO_LIBRARY "${CMAKE_SOURCE_DIR}/deps/mac/lib/liblo.a")
+elseif(UNIX AND NOT APPLE)
+    set(LO_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/deps/linux/include")
+    set(LO_LIBRARY "${CMAKE_SOURCE_DIR}/deps/linux/lib/liblo.a")
+else()
+    message(FATAL_ERROR "Unsupported platform. Only MacOS and Linux are supported.")
+endif()
 
 # Define the application
 juce_add_gui_app(OSCControlApp
