@@ -13,10 +13,7 @@ on:
 
 jobs:
   copilot-setup-steps:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
+    runs-on: macos-latest
 
     steps:
       - name: Checkout code
@@ -25,29 +22,14 @@ jobs:
       - name: Initialize JUCE submodule
         run: git submodule update --init --recursive
 
-      - name: Install dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake g++ liblo-dev liblo-tools libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libasound2-dev libfreetype-dev libfontconfig1-dev libgl1-mesa-dev
-
       - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
         run: |
           brew install liblo
 
       - name: Build the applications
         run: ./build.sh
 
-      - name: Stage Binaries (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          mkdir osc-demo
-          mv './build/juce_osc_app/OSCControlApp_artefacts/OSC Control Demo' osc-demo/osc-juce
-          mv './build/osc_host' osc-demo/osc-pong
-
-      - name: Stage Binaries (macOS)
-        if: runner.os == 'macOS'
+      - name: Stage Binaries
         run: |
           mkdir osc-demo
           mv './build/juce_osc_app/OSCControlApp_artefacts/OSC Control Demo.app/Contents/MacOS/OSC Control Demo' osc-demo/osc-juce
@@ -60,19 +42,3 @@ jobs:
           path: |
             osc-demo/
 
-# Package descriptions:
-# - cmake: Build system generator
-# - g++: GNU C++ compiler
-# - liblo-dev: Lightweight OSC (Open Sound Control) library - development files
-# - liblo-tools: OSC command-line tools including oscsend for testing
-# - libx11-dev: X11 client-side library - development files
-# - libxrandr-dev: X11 RandR extension library - development files
-# - libxinerama-dev: X11 Xinerama extension library - development files
-# - libxcursor-dev: X11 cursor management library - development files
-# - libasound2-dev: ALSA (Advanced Linux Sound Architecture) library - development files
-# - libfreetype-dev: FreeType 2 font engine - development files
-# - libfontconfig1-dev: Generic font configuration library - development files
-# - libgl1-mesa-dev: Mesa OpenGL development files
-
-# Notes:
-# - This setup is required before building the JUCE application with OSC support
