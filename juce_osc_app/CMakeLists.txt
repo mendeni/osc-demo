@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
 
+# Set macOS architectures before project() to build universal binaries
+if(APPLE AND NOT CMAKE_OSX_ARCHITECTURES)
+    set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Build architectures for macOS" FORCE)
+endif()
+
 project(OSCControlApp VERSION 1.0.0)
 
 # Add JUCE
