@@ -13,8 +13,8 @@ _codeql_build_dir/
 *.dll
 
 # Compiled Static libraries
-*.a
-*.lib
+# *.a
+# *.lib
 
 # Executables
 *.exe
