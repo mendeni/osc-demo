@@ -24,12 +24,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake g++ liblo-dev liblo-tools libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libasound2-dev libfreetype-dev libfontconfig1-dev libgl1-mesa-dev
-
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install liblo
+          sudo apt-get install -y cmake g++ liblo-tools libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libasound2-dev libfreetype-dev libfontconfig1-dev libgl1-mesa-dev
 
       - name: Build the applications
         run: ./build.sh
