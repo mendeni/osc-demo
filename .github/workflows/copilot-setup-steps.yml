@@ -13,38 +13,53 @@ on:
 
 jobs:
   copilot-setup-steps:
-    runs-on: ubuntu-latest
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Update package list
-        run: sudo apt-get update
-
-      - name: Install build tools
-        run: sudo apt-get install -y cmake g++
-
-      - name: Install OSC library
-        run: sudo apt-get install -y liblo-dev liblo-tools
-
-      - name: Install X11 libraries
-        run: sudo apt-get install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev
-
-      - name: Install audio libraries
-        run: sudo apt-get install -y libasound2-dev
-
-      - name: Install font libraries
-        run: sudo apt-get install -y libfreetype-dev libfontconfig1-dev
-
-      - name: Install graphics libraries
-        run: sudo apt-get install -y libgl1-mesa-dev
-
       - name: Initialize JUCE submodule
-        run: cd /home/runner/work/osc-demo/osc-demo && git submodule update --init --recursive
+        run: git submodule update --init --recursive
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ liblo-dev liblo-tools libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libasound2-dev libfreetype-dev libfontconfig1-dev libgl1-mesa-dev
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install liblo
 
       - name: Build the applications
         run: ./build.sh
+
+      - name: Stage Binaries (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir osc-demo
+          mv './build/juce_osc_app/OSCControlApp_artefacts/OSC Control Demo' osc-demo/osc-juce
+          mv './build/osc_host' osc-demo/osc-pong
+
+      - name: Stage Binaries (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir osc-demo
+          mv './build/juce_osc_app/OSCControlApp_artefacts/OSC Control Demo.app/Contents/MacOS/OSC Control Demo' osc-demo/osc-juce
+          mv './build/osc_host' osc-demo/osc-pong
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: OSCDemoMendeni-${{ matrix.os }}
+          path: |
+            osc-demo/
 
 # Package descriptions:
 # - cmake: Build system generator
@@ -61,6 +76,4 @@ jobs:
 # - libgl1-mesa-dev: Mesa OpenGL development files
 
 # Notes:
-# - Packages are installed in logical groups to improve reliability
-# - Each step can be retried independently if it fails
 # - This setup is required before building the JUCE application with OSC support
