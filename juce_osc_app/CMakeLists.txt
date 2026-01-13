@@ -51,6 +51,7 @@ target_link_libraries(OSCControlApp PRIVATE "${LO_LIBRARY_PATH}")
 # Link winsock on Windows
 if(WIN32)
     target_link_libraries(osc_host PRIVATE ws2_32)
+    target_link_libraries(osc_host PRIVATE Iphlpapi)
 endif()
 
 # Compile definitions
