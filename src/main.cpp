@@ -1,7 +1,11 @@
 #include <iostream>
 #include <lo/lo.h>
 #include <signal.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <unistd.h>
+#endif
 
 // Global flag for graceful shutdown
 static volatile bool running = true;
@@ -110,11 +114,14 @@ int main() {
     
     std::cout << "Server started successfully!" << std::endl;
     
-    // Main loop - wait for shutdown signal
     while (running) {
-        sleep(1);
+    #ifdef _WIN32
+       Sleep(1000); // Sleep takes milliseconds on Windows
+    #else
+       sleep(1); // sleep takes seconds on POSIX
+    #endif
     }
-    
+
     // Cleanup
     std::cout << "Stopping server..." << std::endl;
     lo_server_thread_stop(server_thread);
