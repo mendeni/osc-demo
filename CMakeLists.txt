@@ -34,8 +34,10 @@ target_include_directories(osc_host PRIVATE ${LO_INCLUDE_DIR})
 # Link static library directly with absolute path to avoid dynamic library search
 target_link_libraries(osc_host PRIVATE "${LO_LIBRARY_PATH}")
 
-# Link winsock
-target_link_libraries(osc_host PRIVATE ws2_32)
+# Link winsock on Windows
+elseif(WIN32)
+    target_link_libraries(osc_host PRIVATE ws2_32)
+endif()
 
 # Add JUCE application subdirectory
 add_subdirectory(juce_osc_app)

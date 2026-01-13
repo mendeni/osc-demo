@@ -48,7 +48,10 @@ target_link_libraries(OSCControlApp
 # Link liblo - include directories and link static library directly with absolute path
 target_include_directories(OSCControlApp PRIVATE ${LO_INCLUDE_DIR})
 target_link_libraries(OSCControlApp PRIVATE "${LO_LIBRARY_PATH}")
-target_link_libraries(OSCControlApp PRIVATE ws2_32)
+# Link winsock on Windows
+elseif(WIN32)
+    target_link_libraries(osc_host PRIVATE ws2_32)
+endif()
 
 # Compile definitions
 target_compile_definitions(OSCControlApp
