@@ -1,4 +1,4 @@
-# Unified build for Linux and macOS
+# Unified build for Linux, macOS, Windows
 name: OSC Demo — Build (matrix)
 
 on:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - name: Checkout code
@@ -32,7 +32,14 @@ jobs:
           brew install liblo
 
       - name: Build the applications
+        if: runner.os != 'Windows'
         run: ./build.sh
+
+      - name: Configure and Build (Windows)
+        if: matrix.platform == 'windows'
+        run: |
+          cmake -S . -B build
+          cmake --build build --config Release
 
       - name: Stage Binaries (Linux)
         if: runner.os == 'Linux'
