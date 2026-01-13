@@ -18,8 +18,11 @@ if(APPLE)
 elseif(UNIX AND NOT APPLE)
     set(LO_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/deps/linux/include")
     set(LO_LIBRARY_PATH "${CMAKE_SOURCE_DIR}/deps/linux/lib/liblo.a")
+elseif(WINDOWS)
+    set(LO_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/deps/windows/include")
+    set(LO_LIBRARY_PATH "${CMAKE_SOURCE_DIR}/deps/windows/lib/liblo.a")
 else()
-    message(FATAL_ERROR "Unsupported platform. Only MacOS and Linux are supported.")
+    message(FATAL_ERROR "Unsupported platform. Only MacOS, Linux and Windows are supported.")
 endif()
 
 # Add executable
