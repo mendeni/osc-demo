@@ -61,9 +61,16 @@ jobs:
           mv './build/juce_osc_app/OSCControlApp_artefacts/OSC Control Demo.app' osc-demo/OSCControlDemo.app
           mv './build/osc_host' osc-demo/osc-pong
 
+      - name: Stage Binaries (Windows)
+        if: matrix.platform == 'windows'
+        run: |
+          mkdir osc-demo
+          mv './build/juce_osc_app/OSCControlApp_artefacts/Release/OSC Control Demo.exe' osc-demo/OSCControlDemo.exe
+          mv './build/Release/osc_host.exe' osc-demo/osc-pong.exe
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: OSCDemoMendeni-${{ matrix.os }}
+          name: OSC-Demo-${{ matrix.os }}
           path: |
             osc-demo/
