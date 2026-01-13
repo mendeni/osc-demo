@@ -49,7 +49,7 @@ target_link_libraries(OSCControlApp
 target_include_directories(OSCControlApp PRIVATE ${LO_INCLUDE_DIR})
 target_link_libraries(OSCControlApp PRIVATE "${LO_LIBRARY_PATH}")
 # Link winsock on Windows
-elseif(WIN32)
+if(WIN32)
     target_link_libraries(osc_host PRIVATE ws2_32)
 endif()
 
