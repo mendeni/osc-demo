@@ -1,6 +1,6 @@
 # OSC Demo
 
-A simple C++ application demonstrating Open Sound Control (OSC) host functionality, compatible with the `oscsend` command-line utility.
+A simple C++ application demonstrating Open Sound Control (OSC) host functionality using the JUCE framework's built-in juce_osc module.
 
 ## Overview
 
@@ -14,7 +14,7 @@ This project includes two applications:
 - **Ping/Pong**: Send a `/ping` message and receive a `/pong` response
 - **Generic Message Handler**: Logs any unmatched OSC messages
 - **Graceful Shutdown**: Handles SIGINT and SIGTERM signals
-- **Thread-based Server**: Uses liblo's server thread for concurrent message handling
+- **Built with JUCE OSC**: Uses juce_osc for reliable cross-platform OSC communication
 
 ### JUCE OSC Control App (OSCControlApp)
 - **Configurable OSC Target**: Set destination address and port through UI or command-line
@@ -32,24 +32,25 @@ This project includes two applications:
 
 - CMake 3.15 or higher
 - C++17 compatible compiler (g++, clang++)
-- liblo (Lightweight OSC library)
-- oscsend utility (from liblo-tools package)
 - JUCE framework (included as a submodule)
+- oscsend utility (from liblo-tools package, for testing)
 - X11 development libraries (for Linux GUI support)
 
 ### Installing Dependencies
 
 On Ubuntu/Debian:
 ```bash
-sudo apt-get install cmake g++ liblo-dev liblo-tools \
+sudo apt-get install cmake g++ liblo-tools \
     libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev \
     libasound2-dev libfreetype6-dev libgl1-mesa-dev
 ```
 
 On macOS:
 ```bash
-brew install liblo cmake
+brew install cmake
 ```
+
+Note: The project now uses JUCE's built-in juce_osc module instead of the external liblo library for OSC communication. The liblo-tools package is only needed for testing with the `oscsend` utility.
 
 ## Building
 
@@ -173,7 +174,7 @@ All float values are clamped to the 0.0-1.0 range automatically.
 ```
 osc-demo/
 ├── src/                    # OSC host source code
-│   └── main.cpp
+│   └── main.cpp           # Uses juce_osc for OSC communication
 ├── juce_osc_app/          # JUCE GUI application
 │   ├── Source/
 │   │   ├── Main.cpp
@@ -185,12 +186,15 @@ osc-demo/
 └── README.md
 ```
 
-## Future Enhancements
+## Technology
 
-- Add more sophisticated message handling and routing
-- Implement bidirectional OSC communication (UI changes send OSC messages)
-- Add preset save/load functionality
-- Support for additional control types
+This project uses the **JUCE framework's juce_osc module** for OSC communication, which provides:
+- Cross-platform OSC support (Windows, macOS, Linux)
+- Thread-safe message handling
+- Native C++ API with modern design patterns
+- No external dependencies beyond JUCE
+
+The previous implementation used the external liblo library, which has been replaced with juce_osc for better integration with the JUCE framework and improved maintainability.
 
 ## License
 
