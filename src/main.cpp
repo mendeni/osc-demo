@@ -48,10 +48,9 @@ public:
         {
             std::cout << "Received ping" << std::endl;
             
-            // For juce_osc, we need to know the sender's address to reply
-            // Since OSCReceiver doesn't provide sender info directly,
-            // we'll send to a default loopback address
-            // In a real application, clients would specify their return address
+            // Note: juce_osc's OSCReceiver doesn't provide sender information like liblo did.
+            // For a production application, clients should include their return address in the message.
+            // For this demo, we send pong responses to a default loopback address.
             sendPong("127.0.0.1", 7771);
         }
         else
@@ -100,7 +99,9 @@ int main()
 {
     const int port = 7770;
     
-    // Initialize JUCE message manager for the main thread
+    // Initialize JUCE message manager (required for JUCE initialization)
+    // Note: We use RealtimeCallback for OSC, so callbacks are invoked directly
+    // on the network thread without needing a running message loop.
     juce::MessageManager::getInstance();
     
     std::cout << "OSC Demo Host - Simple OSC Server" << std::endl;

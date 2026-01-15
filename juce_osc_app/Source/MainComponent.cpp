@@ -63,7 +63,10 @@ void MainComponent::initializeComponent()
     addAndMakeVisible(configTitleLabel);
     configTitleLabel.setText("OSC Target Configuration", juce::dontSendNotification);
     configTitleLabel.setJustificationType(juce::Justification::centredLeft);
-    configTitleLabel.setFont(juce::Font(16.0f, juce::Font::bold));
+    auto font = configTitleLabel.getFont();
+    font.setHeight(16.0f);
+    font.setBold(true);
+    configTitleLabel.setFont(font);
     
     addAndMakeVisible(addressLabel);
     addressLabel.setText("Target Address:", juce::dontSendNotification);
@@ -367,7 +370,8 @@ void MainComponent::oscMessageReceived(const juce::OSCMessage& message)
 
 void MainComponent::oscBundleReceived(const juce::OSCBundle& /*bundle*/)
 {
-    // We don't handle bundles in this application
+    // OSC bundles are not used by this application as all UI controls send individual messages.
+    // Bundles would be useful for atomic updates of multiple parameters, but are not needed here.
 }
 
 void MainComponent::sendOscMessage(const juce::String& address, const juce::OSCMessage& message)
