@@ -1,5 +1,4 @@
 #include "MainComponent.h"
-#include <cstdarg>
 
 MainComponent::MainComponent()
 {
@@ -41,20 +40,14 @@ void MainComponent::initializePropertiesFile()
 
 void MainComponent::initializeComponent()
 {
-    // Set up OSC server
-    char port_str[16];
-    snprintf(port_str, sizeof(port_str), "%d", OSC_PORT);
-    oscServer = lo_server_thread_new(port_str, errorHandler);
-    
-    if (oscServer)
+    // Set up OSC receiver
+    if (!oscReceiver.connect(OSC_PORT))
     {
-        // Register OSC handlers
-        lo_server_thread_add_method(oscServer, "/toggle", "i", toggleHandler, this);
-        lo_server_thread_add_method(oscServer, "/hslider", "f", hsliderHandler, this);
-        lo_server_thread_add_method(oscServer, "/vslider", "f", vsliderHandler, this);
-        lo_server_thread_add_method(oscServer, "/knob", "f", knobHandler, this);
-        
-        lo_server_thread_start(oscServer);
+        std::cerr << "ERROR: Failed to create OSC server on port " << OSC_PORT << std::endl;
+    }
+    else
+    {
+        oscReceiver.addListener(this);
         std::cout << "OSC Server started on port " << OSC_PORT << std::endl;
         std::cout << "Listening for OSC messages on:" << std::endl;
         std::cout << "  /toggle  - integer (0=OFF, 1=ON)" << std::endl;
@@ -62,13 +55,8 @@ void MainComponent::initializeComponent()
         std::cout << "  /vslider - float (0.0-1.0)" << std::endl;
         std::cout << "  /knob    - float (0.0-1.0)" << std::endl;
     }
-    else
-    {
-        std::cerr << "ERROR: Failed to create OSC server on port " << OSC_PORT << std::endl;
-    }
     
-    // Set up OSC client
-    oscClient = nullptr;
+    // Set up OSC sender
     applyConfiguration();
     
     // Configure configuration UI
@@ -110,7 +98,10 @@ void MainComponent::initializeComponent()
         bool state = toggleButton.getToggleState();
         toggleValueLabel.setText(state ? "ON" : "OFF", juce::dontSendNotification);
         std::cout << "Toggle clicked: " << (state ? "ON" : "OFF") << std::endl;
-        sendOscMessage("/toggle", "i", state ? 1 : 0);
+        
+        juce::OSCMessage msg("/toggle");
+        msg.addInt32(state ? 1 : 0);
+        sendOscMessage("/toggle", msg);
     };
     
     addAndMakeVisible(toggleLabel);
@@ -132,7 +123,10 @@ void MainComponent::initializeComponent()
         hSliderValueLabel.setText(juce::String(value, 2), 
                                   juce::dontSendNotification);
         std::cout << "HSlider: " << value << std::endl;
-        sendOscMessage("/hslider", "f", value);
+        
+        juce::OSCMessage msg("/hslider");
+        msg.addFloat32(value);
+        sendOscMessage("/hslider", msg);
     };
     
     addAndMakeVisible(hSliderLabel);
@@ -154,7 +148,10 @@ void MainComponent::initializeComponent()
         vSliderValueLabel.setText(juce::String(value, 2), 
                                   juce::dontSendNotification);
         std::cout << "VSlider: " << value << std::endl;
-        sendOscMessage("/vslider", "f", value);
+        
+        juce::OSCMessage msg("/vslider");
+        msg.addFloat32(value);
+        sendOscMessage("/vslider", msg);
     };
     
     addAndMakeVisible(vSliderLabel);
@@ -176,7 +173,10 @@ void MainComponent::initializeComponent()
         knobValueLabel.setText(juce::String(value, 2), 
                               juce::dontSendNotification);
         std::cout << "Knob: " << value << std::endl;
-        sendOscMessage("/knob", "f", value);
+        
+        juce::OSCMessage msg("/knob");
+        msg.addFloat32(value);
+        sendOscMessage("/knob", msg);
     };
     
     addAndMakeVisible(knobLabel);
@@ -200,16 +200,9 @@ MainComponent::~MainComponent()
         properties->saveIfNeeded();
     }
     
-    if (oscServer)
-    {
-        lo_server_thread_stop(oscServer);
-        lo_server_thread_free(oscServer);
-    }
-    
-    if (oscClient)
-    {
-        lo_address_free(oscClient);
-    }
+    oscReceiver.removeListener(this);
+    oscReceiver.disconnect();
+    oscSender.disconnect();
 }
 
 void MainComponent::paint(juce::Graphics& g)
@@ -323,119 +316,70 @@ void MainComponent::timerCallback()
     }
 }
 
-// Static OSC handler implementations
-int MainComponent::toggleHandler(const char *path, const char *types, lo_arg **argv, 
-                                 int argc, lo_message msg, void *user_data)
+void MainComponent::oscMessageReceived(const juce::OSCMessage& message)
 {
-    MainComponent* component = static_cast<MainComponent*>(user_data);
-    if (component && argc > 0)
-    {
-        int value = argv[0]->i;
-        component->newToggleValue.store(value);
-        component->toggleNeedsUpdate.store(true);
-        std::cout << "OSC /toggle received: " << value << std::endl;
-    }
-    return 0;
-}
-
-int MainComponent::hsliderHandler(const char *path, const char *types, lo_arg **argv, 
-                                  int argc, lo_message msg, void *user_data)
-{
-    MainComponent* component = static_cast<MainComponent*>(user_data);
-    if (component && argc > 0)
-    {
-        float value = argv[0]->f;
-        value = juce::jlimit(0.0f, 1.0f, value);
-        component->newHSliderValue.store(value);
-        component->hsliderNeedsUpdate.store(true);
-        std::cout << "OSC /hslider received: " << value << std::endl;
-    }
-    return 0;
-}
-
-int MainComponent::vsliderHandler(const char *path, const char *types, lo_arg **argv, 
-                                  int argc, lo_message msg, void *user_data)
-{
-    MainComponent* component = static_cast<MainComponent*>(user_data);
-    if (component && argc > 0)
-    {
-        float value = argv[0]->f;
-        value = juce::jlimit(0.0f, 1.0f, value);
-        component->newVSliderValue.store(value);
-        component->vsliderNeedsUpdate.store(true);
-        std::cout << "OSC /vslider received: " << value << std::endl;
-    }
-    return 0;
-}
-
-int MainComponent::knobHandler(const char *path, const char *types, lo_arg **argv, 
-                               int argc, lo_message msg, void *user_data)
-{
-    MainComponent* component = static_cast<MainComponent*>(user_data);
-    if (component && argc > 0)
-    {
-        float value = argv[0]->f;
-        value = juce::jlimit(0.0f, 1.0f, value);
-        component->newKnobValue.store(value);
-        component->knobNeedsUpdate.store(true);
-        std::cout << "OSC /knob received: " << value << std::endl;
-    }
-    return 0;
-}
-
-void MainComponent::errorHandler(int num, const char *msg, const char *path)
-{
-    std::cerr << "OSC Error " << num << " in path " << (path ? path : "unknown") << ": " << msg << std::endl;
-}
-
-void MainComponent::sendOscMessage(const char* address, const char* types, ...)
-{
-    if (!oscClient)
-    {
-        std::cerr << "Error: OSC client not initialized" << std::endl;
-        return;
-    }
+    juce::String address = message.getAddressPattern().toString();
     
-    va_list args;
-    va_start(args, types);
-    
-    lo_message msg = lo_message_new();
-    
-    // Build message based on type string
-    for (const char* t = types; *t != '\0'; ++t)
+    if (address == "/toggle" && message.size() >= 1)
     {
-        switch (*t)
+        if (message[0].isInt32())
         {
-            case 'i':
-                lo_message_add_int32(msg, va_arg(args, int));
-                break;
-            case 'f':
-                lo_message_add_float(msg, static_cast<float>(va_arg(args, double)));
-                break;
-            case 's':
-                lo_message_add_string(msg, va_arg(args, char*));
-                break;
-            default:
-                std::cerr << "Unsupported OSC type: " << *t << std::endl;
-                break;
+            int value = message[0].getInt32();
+            newToggleValue.store(value);
+            toggleNeedsUpdate.store(true);
+            std::cout << "OSC /toggle received: " << value << std::endl;
         }
     }
-    
-    va_end(args);
-    
-    // Send message
-    int result = lo_send_message(oscClient, address, msg);
-    
-    if (result == -1)
+    else if (address == "/hslider" && message.size() >= 1)
+    {
+        if (message[0].isFloat32())
+        {
+            float value = message[0].getFloat32();
+            value = juce::jlimit(0.0f, 1.0f, value);
+            newHSliderValue.store(value);
+            hsliderNeedsUpdate.store(true);
+            std::cout << "OSC /hslider received: " << value << std::endl;
+        }
+    }
+    else if (address == "/vslider" && message.size() >= 1)
+    {
+        if (message[0].isFloat32())
+        {
+            float value = message[0].getFloat32();
+            value = juce::jlimit(0.0f, 1.0f, value);
+            newVSliderValue.store(value);
+            vsliderNeedsUpdate.store(true);
+            std::cout << "OSC /vslider received: " << value << std::endl;
+        }
+    }
+    else if (address == "/knob" && message.size() >= 1)
+    {
+        if (message[0].isFloat32())
+        {
+            float value = message[0].getFloat32();
+            value = juce::jlimit(0.0f, 1.0f, value);
+            newKnobValue.store(value);
+            knobNeedsUpdate.store(true);
+            std::cout << "OSC /knob received: " << value << std::endl;
+        }
+    }
+}
+
+void MainComponent::oscBundleReceived(const juce::OSCBundle& /*bundle*/)
+{
+    // We don't handle bundles in this application
+}
+
+void MainComponent::sendOscMessage(const juce::String& address, const juce::OSCMessage& message)
+{
+    if (!oscSender.send(message))
     {
         std::cerr << "Error sending OSC message to " << address << std::endl;
     }
     else
     {
-        std::cout << "Sent OSC: " << address << " " << types << std::endl;
+        std::cout << "Sent OSC: " << address << std::endl;
     }
-    
-    lo_message_free(msg);
 }
 
 void MainComponent::loadConfiguration()
@@ -458,26 +402,18 @@ void MainComponent::saveConfiguration()
 
 void MainComponent::applyConfiguration()
 {
-    // Free existing client if any
-    if (oscClient)
-    {
-        lo_address_free(oscClient);
-        oscClient = nullptr;
-    }
+    // Disconnect existing sender
+    oscSender.disconnect();
     
-    // Create new OSC client with configured values
-    char target_port_str[16];
-    snprintf(target_port_str, sizeof(target_port_str), "%d", oscTargetPort);
-    oscClient = lo_address_new(oscTargetHost.toRawUTF8(), target_port_str);
-    
-    if (oscClient)
+    // Connect to new target
+    if (!oscSender.connect(oscTargetHost, oscTargetPort))
     {
-        std::cout << "OSC Client initialized, sending to: " << oscTargetHost 
-                  << ":" << oscTargetPort << std::endl;
+        std::cerr << "ERROR: Failed to create OSC client" << std::endl;
     }
     else
     {
-        std::cerr << "ERROR: Failed to create OSC client" << std::endl;
+        std::cout << "OSC Client initialized, sending to: " << oscTargetHost 
+                  << ":" << oscTargetPort << std::endl;
     }
 }
 

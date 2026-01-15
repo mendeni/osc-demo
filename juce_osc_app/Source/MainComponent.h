@@ -1,10 +1,12 @@
 #pragma once
 
 #include <juce_gui_extra/juce_gui_extra.h>
-#include <lo/lo.h>
+#include <juce_osc/juce_osc.h>
 #include <iostream>
 
-class MainComponent : public juce::Component, public juce::Timer
+class MainComponent : public juce::Component, 
+                      public juce::Timer,
+                      public juce::OSCReceiver::Listener<juce::OSCReceiver::MessageLoopCallback>
 {
 public:
     MainComponent();
@@ -14,14 +16,18 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
     void timerCallback() override;
+    
+    // OSC Receiver callbacks
+    void oscMessageReceived(const juce::OSCMessage& message) override;
+    void oscBundleReceived(const juce::OSCBundle& bundle) override;
 
 private:
     // OSC Server
-    lo_server_thread oscServer;
+    juce::OSCReceiver oscReceiver;
     static const int OSC_PORT = 7771;
     
     // OSC Client
-    lo_address oscClient;
+    juce::OSCSender oscSender;
     juce::String oscTargetHost;
     int oscTargetPort;
     
@@ -36,19 +42,8 @@ private:
     bool validateIPAddress(const juce::String& ip);
     bool validatePort(const juce::String& portStr);
     
-    // Static handlers for OSC messages
-    static int toggleHandler(const char *path, const char *types, lo_arg **argv, 
-                            int argc, lo_message msg, void *user_data);
-    static int hsliderHandler(const char *path, const char *types, lo_arg **argv, 
-                             int argc, lo_message msg, void *user_data);
-    static int vsliderHandler(const char *path, const char *types, lo_arg **argv, 
-                             int argc, lo_message msg, void *user_data);
-    static int knobHandler(const char *path, const char *types, lo_arg **argv, 
-                          int argc, lo_message msg, void *user_data);
-    static void errorHandler(int num, const char *msg, const char *path);
-    
     // Helper method to send OSC messages
-    void sendOscMessage(const char* address, const char* types, ...);
+    void sendOscMessage(const juce::String& address, const juce::OSCMessage& message);
     
     // Configuration UI Components
     juce::Label configTitleLabel;
