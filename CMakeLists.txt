@@ -17,6 +17,12 @@ add_subdirectory(JUCE)
 # Add executable
 add_executable(osc_host src/main.cpp)
 
+# Compile definitions
+target_compile_definitions(osc_host
+    PRIVATE
+        JUCE_USE_CURL=0
+        JUCE_WEB_BROWSER=0)
+
 # Link JUCE modules
 target_link_libraries(osc_host
     PRIVATE

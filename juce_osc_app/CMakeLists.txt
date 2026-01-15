@@ -7,8 +7,7 @@ endif()
 
 project(OSCControlApp VERSION 1.0.0)
 
-# Add JUCE
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../JUCE ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
+# JUCE is already added by parent project, so we don't need to add it again
 
 # Define the application
 juce_add_gui_app(OSCControlApp
