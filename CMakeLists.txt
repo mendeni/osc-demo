@@ -11,34 +11,28 @@ project(osc_demo VERSION 1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Platform detection and liblo configuration
-if(APPLE)
-    set(LO_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/deps/mac/include")
-    set(LO_LIBRARY_PATH "${CMAKE_SOURCE_DIR}/deps/mac/lib/liblo.a")
-elseif(UNIX AND NOT APPLE)
-    set(LO_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/deps/linux/include")
-    set(LO_LIBRARY_PATH "${CMAKE_SOURCE_DIR}/deps/linux/lib/liblo.a")
-elseif(WIN32)
-    set(LO_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/deps/windows/include")
-    set(LO_LIBRARY_PATH "${CMAKE_SOURCE_DIR}/deps/windows/lib/liblo.lib")
-else()
-    message(FATAL_ERROR "Unsupported platform. Only MacOS and Linux are supported.")
-endif()
+# Add JUCE
+add_subdirectory(JUCE)
 
 # Add executable
 add_executable(osc_host src/main.cpp)
 
-# Include directories
-target_include_directories(osc_host PRIVATE ${LO_INCLUDE_DIR})
+# Compile definitions
+target_compile_definitions(osc_host
+    PRIVATE
+        JUCE_USE_CURL=0
+        JUCE_WEB_BROWSER=0)
 
-# Link static library directly with absolute path to avoid dynamic library search
-target_link_libraries(osc_host PRIVATE "${LO_LIBRARY_PATH}")
-
-# Link winsock on Windows
-if(WIN32)
-    target_link_libraries(osc_host PRIVATE ws2_32)
-    target_link_libraries(osc_host PRIVATE Iphlpapi)
-endif()
+# Link JUCE modules
+target_link_libraries(osc_host
+    PRIVATE
+        juce::juce_osc
+        juce::juce_events
+        juce::juce_core
+    PUBLIC
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_lto_flags
+        juce::juce_recommended_warning_flags)
 
 # Add JUCE application subdirectory
 add_subdirectory(juce_osc_app)
